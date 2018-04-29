@@ -11,6 +11,8 @@ function Space() {
   this.height = null 
 
   this.spaceship = null 
+
+  this.spaceshipCannonShots = []
 }
 
 
@@ -29,7 +31,8 @@ Space.keyCodes = {
   MOVE_UP: { key: 38, direction: -.5 },
   MOVE_DOWN: { key: 40, direction: .5 },
   MOVE_LEFT: { key: 37, direction: -.5 },
-  MOVE_RIGHT: { key: 39, direction: .5 } 
+  MOVE_RIGHT: { key: 39, direction: .5 },
+  SPACE: { key: 32 }
 }
 
 
@@ -56,6 +59,13 @@ Space.prototype = {
 
     this.spaceship.updatePosition()
     this.spaceship.update()
+
+    if(this.spaceshipCannonShots.length > 0 ) {
+      this.spaceshipCannonShots.forEach(cannonShot => {
+        cannonShot.update()
+        cannonShot.updatePosition()
+      })
+    }
   },
 
   start: function() {
@@ -148,13 +158,19 @@ Spaceship.prototype = {
       case Space.keyCodes.MOVE_DOWN.key:
         this.moveVertical(Space.keyCodes.MOVE_DOWN.direction)
         break;
-      case Space.keyCodes.MOVE_UP.key:
+      case Space.keyCodes.MOVE_UP.key:      
         this.moveVertical(Space.keyCodes.MOVE_UP.direction)
+        break;
+      case Space.keyCodes.SPACE.key:
+        this.cannonShot(this.canvas, this.xPos, this.yPos)
         break;
     }
   },
 
   onKeyUp: function(keyCode) {
+    if(keyCode === Space.keyCodes.SPACE.key)
+      return
+
     if(keyCode === Space.keyCodes.MOVE_UP.key || keyCode === Space.keyCodes.MOVE_DOWN.key)
       return this.stopMovingVertical(keyCode)
     this.stopMovingHorizontaly(keyCode)
@@ -163,6 +179,7 @@ Spaceship.prototype = {
   moveHorizontal: function(direction) {
     return this.speedX = direction 
   },
+
   moveVertical: function(direction) {
     return this.speedY = direction
   },
@@ -172,6 +189,7 @@ Spaceship.prototype = {
     || (keyCode === Space.keyCodes.MOVE_DOWN.key && this.speedY === Space.keyCodes.MOVE_DOWN.direction))
       return this.speedY = 0 
   },
+
   stopMovingHorizontaly: function(keyCode) {
     if(keyCode === Space.keyCodes.MOVE_LEFT.key && this.speedX === Space.keyCodes.MOVE_LEFT.direction
     || (keyCode === Space.keyCodes.MOVE_RIGHT.key && this.speedX === Space.keyCodes.MOVE_RIGHT.direction))
@@ -179,7 +197,7 @@ Spaceship.prototype = {
   },
 
   checkLimitsX: function() {
-    if (this.xPos === (Space.dimensions.MAX_WIDTH - this.width )&& this.speedX > 0){
+    if (this.xPos === (Space.dimensions.MAX_WIDTH - this.width ) && this.speedX > 0){
       this.speedX = 0
       return 0    
     }
@@ -191,7 +209,7 @@ Spaceship.prototype = {
   },
 
   checkLimitsY: function() {
-    if (this.yPos === (Space.dimensions.MAX_HEIGHT - this.height)  && this.speedY > 0){
+    if (this.yPos === (Space.dimensions.MAX_HEIGHT - this.height) && this.speedY > 0){
       this.speedY = 0
       return 0    
     }
@@ -200,7 +218,60 @@ Spaceship.prototype = {
       return 0
     }
     return 1
+  },
+  cannonShot: function(canvas, spaceshipX, spaceshipY) {
+    // So the should starts from the middle and front of the spaceship
+    let cannonShotYPosition = spaceshipY + this.height/2
+    let cannonShotXPosition = spaceshipX + this.width
+
+    let cannonShot = new CannonShot(canvas, cannonShotXPosition, cannonShotYPosition)
+    space.spaceshipCannonShots.push(cannonShot)
+    
   }
+}
+
+///////////////////////////////////////////
+////////////// CannonShot  //////////////////////
+/////////////////////////////////////////
+
+
+function CannonShot(canvas, spaceshipXPos, spaceshipYPos) {
+  this.canvas = canvas
+  this.context = canvas.getContext('2d')
+  this.width = CannonShot.dimensions.MAX_WIDTH 
+  this.height = CannonShot.dimensions.MAX_HEIGHT
+  this.xPos = spaceshipXPos
+  this.yPos = spaceshipYPos
+  this.speedX = 0
+  this.speedY = 0
+
+  this.init()
+}
+
+CannonShot.config = {
+  defaultSpeed: 1,
+  color: 'red'
+}
+
+CannonShot.dimensions = {
+  MAX_WIDTH: 5, 
+  MAX_HEIGHT: 3
+}
+
+CannonShot.prototype = {
+  init: function() {
+    this.draw(this.xPos, this.yPos)
+  },
+  draw: function(x) {
+    this.context.fillStyle = CannonShot.config.color
+    this.context.fillRect(x, this.yPos, this.width, this.height)
+  },
+  update: function() {
+    this.draw(this.xPos)
+  },
+  updatePosition: function() {
+    this.xPos += CannonShot.config.defaultSpeed
+  } 
 }
 
 
@@ -251,6 +322,7 @@ Background.prototype = {
     this.xPos += Background.config.defaultSpeed
   } 
 }
+
 
 ///////////////////////////////////////////
 ////////////// Game commands  //////////////////////
