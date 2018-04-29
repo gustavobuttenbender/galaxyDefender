@@ -10,9 +10,12 @@ function Space() {
   this.width = null
   this.height = null 
 
-  this.spaceship = null 
+  this.background = null
 
+  this.spaceship = null 
   this.spaceshipCannonShots = []
+  
+  this.enemyShips = []
 }
 
 
@@ -52,13 +55,49 @@ Space.prototype = {
   },
 
   update: function() {
+    if(this.enemyShips.length > 0) {
+
+      this.enemyShips.forEach(enemyShip => {
+        if(checkForCollision(this.spaceship, enemyShip)) {
+          this.gameOver()
+        }
+
+        if(this.spaceshipCannonShots.length > 0 ) {
+          this.spaceshipCannonShots.forEach(cannonShot => {
+            if(checkForCollision(cannonShot, enemyShip)) {
+              const indexOfEnemyShip = this.enemyShips.indexOf(enemyShip)
+              const indexOfCannoShot = this.spaceshipCannonShots.indexOf(cannonShot) 
+  
+              this.enemyShips.splice(indexOfEnemyShip, 1)
+              this.spaceshipCannonShots.splice(indexOfCannoShot, 1)
+            }
+          })
+        }
+      })
+    }
+
+    
+
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    this.frameNo += 1 
+
+    if(this.frameNo === 1 || hasReachedIntervalToGenerateEnemies(this.frameNo, 100)) {
+      let yPos = Math.floor(Math.random()*(this.canvas.height))
+      this.enemyShips.push(new EnemyShip(this.canvas, yPos, this.canvas.width))
+    }
 
     this.background.updatePosition()
     this.background.update()
 
     this.spaceship.updatePosition()
     this.spaceship.update()
+
+    if(this.enemyShips.length > 0) {
+      this.enemyShips.forEach(enemyShip => {
+        enemyShip.updatePosition()
+        enemyShip.update()
+      })
+    }
 
     if(this.spaceshipCannonShots.length > 0 ) {
       this.spaceshipCannonShots.forEach(cannonShot => {
@@ -70,12 +109,11 @@ Space.prototype = {
 
   start: function() {
     this.interval = setInterval(() => this.update(), 1)
+  },
+  
+  gameOver: function() {
+    clearInterval(this.interval)
   }
-}
-
-
-Space.stop = function() {
-  clearInterval(this.interval)  
 }
 
 
@@ -143,7 +181,6 @@ Spaceship.prototype = {
 
   startListeningEvents: function() {
     document.addEventListener(Space.events.KEYDOWN, (e) => this.eventHandlers(e))
-    console.log(this)
     document.addEventListener(Space.events.KEYUP, (e) => this.eventHandlers(e))
   },
 
@@ -271,7 +308,7 @@ CannonShot.prototype = {
   },
   updatePosition: function() {
     this.xPos += CannonShot.config.defaultSpeed
-  } 
+  }
 }
 
 
@@ -320,14 +357,75 @@ Background.prototype = {
   },
   updatePosition: function() {
     this.xPos += Background.config.defaultSpeed
-  } 
+  }
 }
 
+///////////////////////////////////////////
+////////////// EnemyShip  //////////////////////
+/////////////////////////////////////////
+
+
+function EnemyShip(canvas, yPos, screenWidth) {
+  this.canvas = canvas
+  this.context = canvas.getContext('2d')
+  this.image = new Image()
+  this.image.src = EnemyShip.config.defaultImage
+  this.width = EnemyShip.dimensions.width 
+  this.height = EnemyShip.dimensions.height
+  this.xPos = screenWidth
+  this.yPos = yPos
+  this.speedX = 0
+  this.speedY = 0
+
+  this.init()
+}
+
+EnemyShip.config = {
+  defaultImage: 'images/enemy-ship.png',
+  defaultSpeed: -1.5
+}
+
+EnemyShip.dimensions = {
+  width: 50,
+  height: 50 
+}
+
+EnemyShip.prototype = {
+  init: function() {
+    this.draw(this.xPos, this.yPos)
+  },
+  draw: function(x) {
+    this.context.drawImage(this.image, x, this.yPos, this.width, this.height)
+  },
+  update: function() {
+    this.draw(this.xPos)
+  },
+  updatePosition: function() {
+    this.xPos += EnemyShip.config.defaultSpeed
+  } 
+}
 
 ///////////////////////////////////////////
 ////////////// Game commands  //////////////////////
 /////////////////////////////////////////
 
+
+function hasReachedIntervalToGenerateEnemies(currentFrame, interval) {
+  return (currentFrame / interval) % 1 == 0
+}
+
+function checkForCollision(component, obstacle) {
+  let componentBottom = component.yPos + component.height 
+  let componentRight = component.xPos + component.width 
+
+  let obstacleBottom = obstacle.yPos + obstacle.height
+  let obstacleRight = obstacle.xPos + obstacle.width 
+
+  return !((componentBottom < obstacle.yPos) ||
+          (component.yPos > obstacleBottom)  ||
+          (componentRight < obstacle.xPos)  ||
+          (component.xPos > obstacleRight))
+}
 
 function startGame() {
   space = new Space()
