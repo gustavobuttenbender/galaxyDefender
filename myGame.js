@@ -26,8 +26,8 @@ Space.events = {
 }
 
 Space.dimensions = {
-  MAX_WIDTH: 600,
-  MAX_HEIGHT: 270
+  MAX_WIDTH: 800,
+  MAX_HEIGHT: 352
 }
 
 Space.keyCodes = {
@@ -124,15 +124,19 @@ function Spaceship(canvas, screenHeigth) {
   this.canvas = canvas
   this.context = canvas.getContext('2d')
   this.image = new Image()
-  this.image.src = Spaceship.config.defaultImage
+  this.image.src = Spaceship.config.defaultImage  
   this.width = Spaceship.dimensions.width
   this.height = Spaceship.dimensions.height 
   this.xPos = 0
   this.yPos = screenHeigth/2
   this.speedX = 0
   this.speedY = 0
+  this.currentFrame = 0
+  this.numberTotalOfSprites = 3
+  this.updatesCount = 0
+  this.updatesPerFrame = 15
 
-  this.collisionBox = new CollisionBox(this.xPos, this.yPos, this.width - 5, this.height - 10) 
+  this.collisionBox = new CollisionBox(this.xPos, this.yPos, this.width - 20, this.height - 10) 
   
 
   this.startListeningEvents()
@@ -141,12 +145,12 @@ function Spaceship(canvas, screenHeigth) {
 }
 
 Spaceship.dimensions = {
-  width: 60,
-  height: 30 
+  width: 64,
+  height: 29 
 }
 
 Spaceship.config = {
-  defaultImage: 'images/ship.png'
+  defaultImage: 'images/ships.png'
 }
 
 Spaceship.prototype = {
@@ -157,12 +161,23 @@ Spaceship.prototype = {
   },
 
   draw: function (x, y) {
-    this.context.drawImage(this.image, x, y, this.width, this.height)
+    this.context.drawImage(this.image, 0, this.currentFrame*this.height, this.width, this.height, x, y, this.width, this.height)
+    
+    this.updatesCount++ 
+
+    if (this.updatesCount > this.updatesPerFrame) {
+      this.updatesCount = 0
+
+      if(this.currentFrame === this.numberTotalOfSprites)
+        return this.currentFrame = 0 
+    
+      this.currentFrame++
+    }
   },
 
   update: function() {
     this.draw(this.xPos, this.yPos)
-    this.collisionBox.xPos = this.xPos
+    this.collisionBox.xPos = this.xPos + 15
     this.collisionBox.yPos = this.yPos
   },
 
@@ -260,7 +275,7 @@ Spaceship.prototype = {
     return 1
   },
   cannonShot: function(canvas, spaceshipX, spaceshipY) {
-    // So the should starts from the middle and front of the spaceship
+    // So the shots start from the middle and front of the spaceship
     let cannonShotYPosition = spaceshipY + this.height/2
     let cannonShotXPosition = spaceshipX + this.width
 
@@ -385,6 +400,11 @@ function EnemyShip(canvas, yPos, screenWidth) {
   this.yPos = yPos
   this.speedX = 0
   this.speedY = 0
+  this.currentFrame = 0
+  this.numberTotalOfSprites = 3
+  this.updatesCount = 0
+  this.updatesPerFrame = 15
+
 
   this.collisionBox = new CollisionBox(this.xPos, this.yPos, this.width - 10, this.height - 10) 
   
@@ -398,8 +418,8 @@ EnemyShip.config = {
 }
 
 EnemyShip.dimensions = {
-  width: 50,
-  height: 50 
+  width: 40,
+  height: 30 
 }
 
 EnemyShip.prototype = {
@@ -407,12 +427,23 @@ EnemyShip.prototype = {
     this.draw(this.xPos, this.yPos)
   },
   draw: function(x) {
-    this.context.drawImage(this.image, x, this.yPos, this.width, this.height)
-    this.collisionBox.xPos = this.xPos
-    this.collisionBox.yPos = this.yPos
+    this.context.drawImage(this.image, 0, this.currentFrame*this.height, this.width, this.height, x, this.yPos, this.width, this.height)
+    
+    this.updatesCount++ 
+
+    if (this.updatesCount > this.updatesPerFrame) {
+      this.updatesCount = 0
+
+      if(this.currentFrame === this.numberTotalOfSprites)
+        return this.currentFrame = 0 
+    
+      this.currentFrame++
+    }
   },
   update: function() {
     this.draw(this.xPos)
+    this.collisionBox.xPos = this.xPos
+    this.collisionBox.yPos = this.yPos
   },
   updatePosition: function() {
     this.xPos += EnemyShip.config.defaultSpeed
@@ -460,4 +491,3 @@ function startGame() {
 }
 
 startGame()
-
