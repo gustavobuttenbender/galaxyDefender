@@ -58,7 +58,7 @@ Space.prototype = {
     if(this.enemyShips.length > 0) {
 
       this.enemyShips.forEach(enemyShip => {
-        if(checkForCollision(this.spaceship, enemyShip)) {
+        if(checkForCollision(this.spaceship.collisionBox, enemyShip.collisionBox)) {
           this.gameOver()
         }
 
@@ -75,8 +75,6 @@ Space.prototype = {
         }
       })
     }
-
-    
 
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
     this.frameNo += 1 
@@ -134,6 +132,9 @@ function Spaceship(canvas, screenHeigth) {
   this.speedX = 0
   this.speedY = 0
 
+  this.collisionBox = new CollisionBox(this.xPos, this.yPos, this.width - 5, this.height - 10) 
+  
+
   this.startListeningEvents()
 
   this.init()
@@ -161,6 +162,8 @@ Spaceship.prototype = {
 
   update: function() {
     this.draw(this.xPos, this.yPos)
+    this.collisionBox.xPos = this.xPos
+    this.collisionBox.yPos = this.yPos
   },
 
   updatePosition: function() {
@@ -299,13 +302,16 @@ CannonShot.prototype = {
   init: function() {
     this.draw(this.xPos, this.yPos)
   },
+
   draw: function(x) {
     this.context.fillStyle = CannonShot.config.color
     this.context.fillRect(x, this.yPos, this.width, this.height)
   },
+
   update: function() {
     this.draw(this.xPos)
   },
+
   updatePosition: function() {
     this.xPos += CannonShot.config.defaultSpeed
   }
@@ -346,15 +352,18 @@ Background.prototype = {
   init: function() {
     this.draw(this.xPos, this.yPos)
   },
+
   draw: function(x) {
     this.context.drawImage(this.image, x , this.yPos, this.width, this.height)
     this.context.drawImage(this.image, x + this.width, this.yPos, this.width, this.height)
   },
+
   update: function() {
     if(this.xPos === -(Background.dimensions.MAX_WIDTH))
       this.xPos = 0 
     this.draw(this.xPos)
   },
+
   updatePosition: function() {
     this.xPos += Background.config.defaultSpeed
   }
@@ -377,6 +386,9 @@ function EnemyShip(canvas, yPos, screenWidth) {
   this.speedX = 0
   this.speedY = 0
 
+  this.collisionBox = new CollisionBox(this.xPos, this.yPos, this.width - 10, this.height - 10) 
+  
+
   this.init()
 }
 
@@ -396,6 +408,8 @@ EnemyShip.prototype = {
   },
   draw: function(x) {
     this.context.drawImage(this.image, x, this.yPos, this.width, this.height)
+    this.collisionBox.xPos = this.xPos
+    this.collisionBox.yPos = this.yPos
   },
   update: function() {
     this.draw(this.xPos)
@@ -403,6 +417,19 @@ EnemyShip.prototype = {
   updatePosition: function() {
     this.xPos += EnemyShip.config.defaultSpeed
   } 
+}
+
+
+///////////////////////////////////////////
+////////////// CollisionBoxes  //////////////////////
+/////////////////////////////////////////
+
+
+function CollisionBox(xPos, yPos, width, height) {
+  this.xPos = xPos
+  this.yPos = yPos
+  this.width = width
+  this.height = height
 }
 
 ///////////////////////////////////////////
